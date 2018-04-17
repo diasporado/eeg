@@ -28,20 +28,20 @@ def build_crops(X, y, increment, training=True):
     X_list = []
     samplingfreq = 2
     
-    while (tmaximum<=1126):
+    while (tmaximum<=1120):
         X_list.append(X[:,tminimum:tmaximum][:,::samplingfreq])
         tminimum=tminimum+increment
         tmaximum=tmaximum+increment
-        if tmaximum > 1126:
+        if tmaximum > 1120:
             break
     
     tmaximum = 501
     tminimum = 1
-    while (tmaximum<=1126):
+    while (tmaximum<=1120):
         X_list.append(X[:,tminimum:tmaximum][:,::samplingfreq])
         tminimum=tminimum+increment
         tmaximum=tmaximum+increment
-        if tmaximum > 1126:
+        if tmaximum > 1120:
             break
     
     crops = len(X_list)
@@ -208,7 +208,7 @@ if __name__ == '__main__': # if this file is been run directly by Python
         test_index = subj_test_order[i]
         np.random.seed(123)
         X, y = read_bci_data_fb.raw_to_data(raw_edf_train[train_index], training=True, drop_rejects=True, subj=train_index)
-        X, y, crops = build_crops(X, y, 5, training=True)
+        X, y, crops = build_crops(X, y, 10, training=True)
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2)
         
         tf.reset_default_graph()
@@ -222,7 +222,7 @@ if __name__ == '__main__': # if this file is been run directly by Python
             del(y)
             gc.collect()
             X_test, y_test = read_bci_data_fb.raw_to_data(raw_edf_test[test_index], training=False, drop_rejects=True, subj=test_index)
-            X_test, y_test, crops = build_crops(X_test, y_test, 5, training=False)
+            X_test, y_test, crops = build_crops(X_test, y_test, 10, training=False)
             evaluate_model(X_test, y_test, i+1, crops)
             del(X_test)
             del(y_test)
