@@ -28,20 +28,20 @@ def build_crops(X, y, increment, training=True):
     X_list = []
     samplingfreq = 2
     
-    while (tmaximum<=1000):
+    while (tmaximum<=1125):
         X_list.append(X[:,tminimum:tmaximum][:,::samplingfreq])
         tminimum=tminimum+increment
         tmaximum=tmaximum+increment
-        if tmaximum > 1000:
+        if tmaximum > 1125:
             break
     
     tmaximum = 501
     tminimum = 1
-    while (tmaximum<=1000):
+    while (tmaximum<=1125):
         X_list.append(X[:,tminimum:tmaximum][:,::samplingfreq])
         tminimum=tminimum+increment
         tmaximum=tmaximum+increment
-        if tmaximum > 1000:
+        if tmaximum > 1125:
             break
     
     crops = len(X_list)
@@ -63,7 +63,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     #X_val = np.split(X_val, [1,2,3], axis=4) 
     
     n_epoch = 500
-    early_stopping = 30
+    early_stopping = 15
     classes_len = len(np.unique(y_train))
 
     Y_train = to_categorical(y_train, classes_len)
@@ -131,7 +131,7 @@ def train(X_train, y_train, X_val, y_val, subject):
           callbacks.EarlyStopping(patience=early_stopping, monitor='val_acc', min_delta=0.0001)]
     model.summary()
     model.fit(X_train, Y_train, validation_data=(X_val, Y_val), 
-              batch_size=128, epochs=n_epoch, verbose=2, callbacks=cb)
+              batch_size=128, epochs=n_epoch, verbose=1, callbacks=cb)
 
 
 
