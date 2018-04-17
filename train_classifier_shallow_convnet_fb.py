@@ -131,7 +131,7 @@ def train(X_train, y_train, X_val, y_val, subject):
           callbacks.EarlyStopping(patience=early_stopping, monitor='val_acc', min_delta=0.0001)]
     model.summary()
     model.fit(X_train, Y_train, validation_data=(X_val, Y_val), 
-              batch_size=512, epochs=n_epoch, verbose=2, callbacks=cb)
+              batch_size=128, epochs=n_epoch, verbose=2, callbacks=cb)
 
 
 
