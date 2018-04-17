@@ -82,7 +82,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe1 = LeakyReLU(alpha=0.05)(pipe1)
         pipe1 = Dropout(0.5)(pipe1)
         pipe1 = AveragePooling3D(pool_size=(1,3,3), strides=(1,1,1), padding='same')(pipe1)
-        pipe1 = Conv3D(40, (1,1,1), strides=(1,1,1), padding='valid')(pipe1)
+        #pipe1 = Conv3D(40, (1,1,1), strides=(1,1,1), padding='valid')(pipe1)
         #pipe1 = Reshape((pipe1.shape[1].value, 42, 4))(pipe1)
         
         pipe2 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
@@ -106,7 +106,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe3 = BatchNormalization()(pipe3)
         pipe3 = LeakyReLU(alpha=0.05)(pipe3)
         pipe3 = Dropout(0.5)(pipe3)
-        pipe3 = Conv3D(40, (1,1,1),  strides=(1,1,1), padding='valid')(pipe3)
+        #pipe3 = Conv3D(40, (1,1,1),  strides=(1,1,1), padding='valid')(pipe3)
         pipe3 = Reshape((pipe3.shape[1].value, 40))(pipe3)
         
         pipe = concatenate([pipe12,pipe3], axis=2)
@@ -131,7 +131,7 @@ def train(X_train, y_train, X_val, y_val, subject):
           callbacks.EarlyStopping(patience=early_stopping, monitor='val_acc', min_delta=0.0001)]
     model.summary()
     model.fit(X_train, Y_train, validation_data=(X_val, Y_val), 
-              batch_size=128, epochs=n_epoch, verbose=2, callbacks=cb)
+              batch_size=512, epochs=n_epoch, verbose=2, callbacks=cb)
 
 
 
