@@ -8,7 +8,7 @@ import tensorflow as tf
 from keras.models import Model, Sequential, load_model
 from keras.layers import Dense,BatchNormalization,AveragePooling2D,MaxPooling2D,MaxPooling3D, \
     Convolution2D,Activation,Flatten,Dropout,Convolution1D,Reshape,Conv3D,TimeDistributed,LSTM,AveragePooling3D, \
-    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU
+    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU, AveragePooling1D
 from keras.utils.np_utils import to_categorical
 from keras import optimizers, callbacks
 import matplotlib
@@ -32,6 +32,17 @@ def build_crops(X, y, increment, training=True):
         X_list.append(X[:,tminimum:tmaximum][:,::samplingfreq])
         tminimum=tminimum+increment
         tmaximum=tmaximum+increment
+        if tmaximum > 1000:
+            break
+    
+    tmaximum = 501
+    tminimum = 1
+    while (tmaximum<=1000):
+        X_list.append(X[:,tminimum:tmaximum][:,::samplingfreq])
+        tminimum=tminimum+increment
+        tmaximum=tmaximum+increment
+        if tmaximum > 1000:
+            break
     
     crops = len(X_list)
     X = np.array(X_list)
@@ -66,40 +77,61 @@ def train(X_train, y_train, X_val, y_val, subject):
     def layers(inputs):
         #pipe = Conv3D(40, (25,1,1), strides=(1,1,1), activation='linear')(inputs)
  
-        pipe1 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='valid')(inputs)
+        pipe1 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
         pipe1 = BatchNormalization()(pipe1)
-        pipe1 = LeakyReLU(alpha=0.01)(pipe1)
+        pipe1 = LeakyReLU(alpha=0.05)(pipe1)
         pipe1 = Dropout(0.5)(pipe1)
-        pipe1 = Conv3D(4, (1,4,5), strides=(1,1,1), padding='valid')(pipe1)
-
-        pipe2 = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
+        pipe1 = AveragePooling3D(pool_size=(1,3,3), strides=(1,1,1), padding='same')(pipe1)
+        pipe1 = Conv3D(40, (1,1,1), strides=(1,1,1), padding='valid')(pipe1)
+        #pipe1 = Reshape((pipe1.shape[1].value, 42, 4))(pipe1)
         
-        pipe = concatenate([pipe1,pipe2], axis=4)
-        pipe = BatchNormalization()(pipe)
-        pipe = LeakyReLU(alpha=0.01)(pipe)
-        pipe = Dropout(0.5)(pipe)
-        pipe = AveragePooling3D(pool_size=(75,1,1), strides=(15,1,1))(pipe)
+        pipe2 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
+        pipe2 = BatchNormalization()(pipe2)
+        pipe2 = LeakyReLU(alpha=0.05)(pipe2)
+        pipe2 = Dropout(0.5)(pipe2)
+        pipe2 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(pipe2)
+        pipe2 = BatchNormalization()(pipe2)
+        pipe2 = LeakyReLU(alpha=0.05)(pipe2)
+        pipe2 = Dropout(0.5)(pipe2)
+        #pipe2 = Reshape((pipe2.shape[1].value, 42, 4))(pipe2)
+        
+        pipe12 = concatenate([pipe1,pipe2], axis=4)
+        pipe12 = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(pipe12)
+        pipe12 = BatchNormalization()(pipe12)
+        pipe12 = LeakyReLU(alpha=0.05)(pipe12)
+        pipe12 = Dropout(0.5)(pipe12)
+        pipe12 = Reshape((pipe12.shape[1].value, 40))(pipe12)
+        
+        pipe3 = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
+        pipe3 = BatchNormalization()(pipe3)
+        pipe3 = LeakyReLU(alpha=0.05)(pipe3)
+        pipe3 = Dropout(0.5)(pipe3)
+        pipe3 = Conv3D(40, (1,1,1),  strides=(1,1,1), padding='valid')(pipe3)
+        pipe3 = Reshape((pipe3.shape[1].value, 40))(pipe3)
+        
+        pipe = concatenate([pipe12,pipe3], axis=2)
+        pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
         pipe = Flatten()(pipe)
         return pipe
     
     pipeline = layers(inputs)
-    #pipeline = Dense(128)(pipeline)
-    #pipeline = BatchNormalization()(pipeline)
-    #pipeline = Activation('elu')(pipeline)
+    pipeline = Dense(128)(pipeline)
+    pipeline = BatchNormalization()(pipeline)
+    pipeline = LeakyReLU(alpha=0.05)(pipeline)
     #pipe = Dropout(0.5)(pipe)
     output = Dense(output_dim, activation=activation)(pipeline)
     model = Model(inputs=inputs, outputs=output)
 
-    opt = optimizers.adam(lr=0.01)
+    opt = optimizers.adam(lr=0.001, beta_2=0.999)
     model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
     cb = [callbacks.ProgbarLogger(count_mode='samples'),
-          callbacks.ReduceLROnPlateau(monitor='val_acc',factor=0.2,patience=5,min_lr=0.00001),
+          callbacks.ReduceLROnPlateau(monitor='loss',factor=0.5,patience=7,min_lr=0.00001),
           callbacks.ModelCheckpoint('./model_results_fb/A0{:d}_model.hdf5'.format(subject),monitor='val_loss',verbose=0,
                                     save_best_only=True, period=1),
           callbacks.EarlyStopping(patience=early_stopping, monitor='val_acc', min_delta=0.0001)]
     model.summary()
     model.fit(X_train, Y_train, validation_data=(X_val, Y_val), 
-              batch_size=128, epochs=n_epoch, verbose=1, callbacks=cb)
+              batch_size=128, epochs=n_epoch, verbose=2, callbacks=cb)
 
 
 
@@ -176,7 +208,7 @@ if __name__ == '__main__': # if this file is been run directly by Python
         test_index = subj_test_order[i]
         np.random.seed(123)
         X, y = read_bci_data_fb.raw_to_data(raw_edf_train[train_index], training=True, drop_rejects=True, subj=train_index)
-        X, y, crops = build_crops(X, y, 20, training=True)
+        X, y, crops = build_crops(X, y, 10, training=True)
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2)
         
         tf.reset_default_graph()
@@ -190,7 +222,7 @@ if __name__ == '__main__': # if this file is been run directly by Python
             del(y)
             gc.collect()
             X_test, y_test = read_bci_data_fb.raw_to_data(raw_edf_test[test_index], training=False, drop_rejects=True, subj=test_index)
-            X_test, y_test, crops = build_crops(X_test, y_test, 20, training=False)
+            X_test, y_test, crops = build_crops(X_test, y_test, 10, training=False)
             evaluate_model(X_test, y_test, i+1, crops)
             del(X_test)
             del(y_test)
