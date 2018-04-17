@@ -28,20 +28,20 @@ def build_crops(X, y, increment, training=True):
     X_list = []
     samplingfreq = 2
     
-    while (tmaximum<=1125):
+    while (tmaximum<=1126):
         X_list.append(X[:,tminimum:tmaximum][:,::samplingfreq])
         tminimum=tminimum+increment
         tmaximum=tmaximum+increment
-        if tmaximum > 1125:
+        if tmaximum > 1126:
             break
     
     tmaximum = 501
     tminimum = 1
-    while (tmaximum<=1125):
+    while (tmaximum<=1126):
         X_list.append(X[:,tminimum:tmaximum][:,::samplingfreq])
         tminimum=tminimum+increment
         tmaximum=tmaximum+increment
-        if tmaximum > 1125:
+        if tmaximum > 1126:
             break
     
     crops = len(X_list)
