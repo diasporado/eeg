@@ -112,7 +112,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         
         pipe = concatenate([pipe12,pipe3], axis=2)
         
-        pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe12)
+        pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
         pipe = Flatten()(pipe)
         return pipe
     
