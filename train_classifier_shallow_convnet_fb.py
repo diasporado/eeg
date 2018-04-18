@@ -63,7 +63,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     #X_val = np.split(X_val, [1,2,3], axis=4) 
     
     n_epoch = 500
-    early_stopping = 30
+    early_stopping = 40
     classes_len = len(np.unique(y_train))
 
     Y_train = to_categorical(y_train, classes_len)
@@ -133,7 +133,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     opt = optimizers.adam(lr=0.001, beta_2=0.999)
     model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
     cb = [callbacks.ProgbarLogger(count_mode='samples'),
-          callbacks.ReduceLROnPlateau(monitor='loss',factor=0.5,patience=7,min_lr=0.00001),
+          callbacks.ReduceLROnPlateau(monitor='loss',factor=0.5,patience=8,min_lr=0.00001),
           callbacks.ModelCheckpoint('./model_results_fb/A0{:d}_model.hdf5'.format(subject),monitor='val_loss',verbose=0,
                                     save_best_only=True, period=1),
           callbacks.EarlyStopping(patience=early_stopping, monitor='val_acc', min_delta=0.0001)]
