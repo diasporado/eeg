@@ -77,7 +77,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     def layers(inputs):
         #pipe = Conv3D(40, (25,1,1), strides=(1,1,1), activation='linear')(inputs)
  
-        pipe1 = Conv3D(64, (1,3,3), strides=(1,1,1), padding='same')(inputs)
+        pipe1 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
         pipe1 = BatchNormalization()(pipe1)
         pipe1 = LeakyReLU(alpha=0.05)(pipe1)
         pipe1 = Dropout(0.5)(pipe1)
@@ -85,7 +85,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe1 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe1)
         #pipe1 = Reshape((pipe1.shape[1].value, 42, 4))(pipe1)
         
-        pipe2 = Conv3D(64, (1,3,3), strides=(1,1,1), padding='same')(inputs)
+        pipe2 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
         pipe2 = BatchNormalization()(pipe2)
         pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         pipe2 = Dropout(0.5)(pipe2)
@@ -96,14 +96,14 @@ def train(X_train, y_train, X_val, y_val, subject):
         #pipe2 = Reshape((pipe2.shape[1].value, 42, 4))(pipe2)
         
         pipe12 = concatenate([pipe1,pipe2], axis=4)
-        pipe12 = Conv3D(64, (1,6,7), strides=(1,1,1), padding='valid')(pipe12)
+        pipe12 = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(pipe12)
         pipe12 = BatchNormalization()(pipe12)
         pipe12 = LeakyReLU(alpha=0.05)(pipe12)
         pipe12 = Dropout(0.5)(pipe12)
         pipe12 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe12)
         pipe12 = Reshape((pipe12.shape[1].value, 4))(pipe12)
         
-        pipe3 = Conv3D(64, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
+        pipe3 = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
         pipe3 = BatchNormalization()(pipe3)
         pipe3 = LeakyReLU(alpha=0.05)(pipe3)
         pipe3 = Dropout(0.5)(pipe3)
@@ -116,6 +116,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         return pipe
     
     pipeline = layers(inputs)
+    """
     pipeline = Dense(128)(pipeline)
     pipeline = BatchNormalization()(pipeline)
     pipeline = LeakyReLU(alpha=0.05)(pipeline)
@@ -124,6 +125,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     pipeline = BatchNormalization()(pipeline)
     pipeline = LeakyReLU(alpha=0.05)(pipeline)
     pipeline = Dropout(0.5)(pipeline)
+    """
     output = Dense(output_dim, activation=activation)(pipeline)
     model = Model(inputs=inputs, outputs=output)
 
