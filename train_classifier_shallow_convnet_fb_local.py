@@ -134,7 +134,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
     cb = [callbacks.ProgbarLogger(count_mode='samples'),
           callbacks.ReduceLROnPlateau(monitor='loss',factor=0.5,patience=7,min_lr=0.00001),
-          callbacks.ModelCheckpoint('./model_results_fb/A0{:d}_model.hdf5'.format(subject),monitor='val_loss',verbose=0,
+          callbacks.ModelCheckpoint('./model_results_fb_local/A0{:d}_model.hdf5'.format(subject),monitor='val_loss',verbose=0,
                                     save_best_only=True, period=1),
           callbacks.EarlyStopping(patience=early_stopping, monitor='val_acc', min_delta=0.0001)]
     model.summary()
@@ -156,7 +156,7 @@ def evaluate_model(X_test, y_test, subject, crops):
     
     # Multi-class Classification
     model_name = 'A0{:d}_model'.format(subject)
-    model = load_model('./model_results_fb/{}.hdf5'.format(model_name))
+    model = load_model('./model_results_fb_local/{}.hdf5'.format(model_name))
     y_pred = model.predict(X_test)
     #Y_preds = np.argmax(y_pred, axis=1)
     Y_preds = np.argmax(y_pred, axis=1).reshape(num_trials, crops)
@@ -180,7 +180,7 @@ def evaluate_model(X_test, y_test, subject, crops):
     avg_tot = (out_df.apply(lambda x: round(x.mean(), 2) if x.name!="support" else  round(x.sum(), 2)).to_frame().T)
     avg_tot.index = ["avg/total"]
     out_df = out_df.append(avg_tot)
-    out_df.to_csv('./model_results_fb/{}.csv'.format(model_name))
+    out_df.to_csv('./model_results_fb_local/{}.csv'.format(model_name))
     
     print(metrics.classification_report(actual,predicted))
     print('kappa value: {}'.format(kappa_score))
