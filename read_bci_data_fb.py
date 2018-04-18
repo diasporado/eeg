@@ -126,8 +126,8 @@ def raw_to_data(raw_edf, training=True, drop_rejects=True, subj=None):
     filter_data = np.array(filter_data)
         
     if training:
-        #oScaler = Scaler(scalings='mean').fit(filter_data.flatten().reshape(-1,1))
-        oScaler = MinMaxScaler(copy=True, feature_range=(-1, 1)).fit(filter_data.flatten().reshape(-1,1))
+        oScaler = Scaler(scalings='mean').fit(filter_data.flatten().reshape(-1,1))
+        #oScaler = MinMaxScaler(copy=True, feature_range=(-1, 1)).fit(filter_data.flatten().reshape(-1,1))
         pk.dump(oScaler,open("./fb/subject{}_filter_oscaler.pk".format(subjects[subj]),'wb'))
     else:
         oScaler = pk.load(open("./fb/subject{}_filter_oscaler.pk".format(subjects[subj]),'rb'))
