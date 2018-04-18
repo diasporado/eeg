@@ -96,7 +96,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         #pipe2 = Reshape((pipe2.shape[1].value, 42, 4))(pipe2)
         
         pipe12 = concatenate([pipe1,pipe2], axis=4)
-        #pipe12 = Conv3D(4, (1,6,7), strides=(1,1,1), padding='valid')(pipe12)
+        pipe12 = Conv3D(4, (1,6,7), strides=(1,1,1), padding='valid')(pipe12)
         pipe12 = BatchNormalization()(pipe12)
         pipe12 = LeakyReLU(alpha=0.05)(pipe12)
         pipe12 = Dropout(0.5)(pipe12)
