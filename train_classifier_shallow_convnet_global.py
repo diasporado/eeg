@@ -76,7 +76,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     
     def layers(inputs):
         
-        pipe = Conv3D(40, (1,22), strides=(1,1,1), padding='valid')(inputs)
+        pipe = Convolution2D(40, (1,22), strides=(1,1), padding='valid')(inputs)
         pipe = BatchNormalization()(pipe)
         pipe = LeakyReLU(alpha=0.05)(pipe)
         pipe = Dropout(0.5)(pipe)
