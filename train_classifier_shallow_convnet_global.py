@@ -46,7 +46,7 @@ def build_crops(X, y, increment, training=True):
     
     crops = len(X_list)
     X = np.array(X_list)
-    X = X.transpose(1,0,2,3,4,5)
+    X = X.transpose(1,0,2,3,4)
     X = X.reshape(X.shape[0]*X.shape[1],X.shape[2],X.shape[3],X.shape[4])    
     
     if training:
