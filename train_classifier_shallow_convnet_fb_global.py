@@ -75,58 +75,19 @@ def train(X_train, y_train, X_val, y_val, subject):
     inputs = Input(shape=(X_shape[1],X_shape[2],X_shape[3],X_shape[4]))
     
     def layers(inputs):
-        #pipe = Conv3D(40, (25,1,1), strides=(1,1,1), activation='linear')(inputs)
- 
-        pipe1 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
-        pipe1 = BatchNormalization()(pipe1)
-        pipe1 = LeakyReLU(alpha=0.05)(pipe1)
-        pipe1 = Dropout(0.5)(pipe1)
-        pipe1 = AveragePooling3D(pool_size=(1,3,3), strides=(1,1,1), padding='same')(pipe1)
-        pipe1 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe1)
-        #pipe1 = Reshape((pipe1.shape[1].value, 42, 4))(pipe1)
         
-        pipe2 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
-        pipe2 = BatchNormalization()(pipe2)
-        pipe2 = LeakyReLU(alpha=0.05)(pipe2)
-        pipe2 = Dropout(0.5)(pipe2)
-        pipe2 = Conv3D(4, (1,3,3), strides=(1,1,1), padding='same')(pipe2)
-        pipe2 = BatchNormalization()(pipe2)
-        pipe2 = LeakyReLU(alpha=0.05)(pipe2)
-        pipe2 = Dropout(0.5)(pipe2)
-        #pipe2 = Reshape((pipe2.shape[1].value, 42, 4))(pipe2)
-        
-        pipe12 = concatenate([pipe1,pipe2], axis=4)
-        #pipe12 = Conv3D(4, (1,6,7), strides=(1,1,1), padding='valid')(pipe12)
-        pipe12 = BatchNormalization()(pipe12)
-        pipe12 = LeakyReLU(alpha=0.05)(pipe12)
-        pipe12 = Dropout(0.5)(pipe12)
-        #pipe12 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe12)
-        pipe12 = Reshape((pipe12.shape[1].value, 4))(pipe12)
-        
-        pipe3 = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
-        pipe3 = BatchNormalization()(pipe3)
-        pipe3 = LeakyReLU(alpha=0.05)(pipe3)
-        pipe3 = Dropout(0.5)(pipe3)
-        pipe3 = Conv3D(4, (1,1,1),  strides=(1,1,1), padding='valid')(pipe3)
-        pipe3 = Reshape((pipe3.shape[1].value, 4))(pipe3)
-        
-        pipe = concatenate([pipe12,pipe3], axis=2)
-        
-        pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe12)
+        pipe = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
+        pipe = BatchNormalization()(pipe)
+        pipe = LeakyReLU(alpha=0.05)(pipe)
+        pipe = Dropout(0.5)(pipe)
+        pipe = Reshape((pipe.shape[1].value, 40))(pipe)
+
+        pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
         pipe = Flatten()(pipe)
         return pipe
     
     pipeline = layers(inputs)
-    """
-    pipeline = Dense(128)(pipeline)
-    pipeline = BatchNormalization()(pipeline)
-    pipeline = LeakyReLU(alpha=0.05)(pipeline)
-    pipeline = Dropout(0.5)(pipeline)
-    pipeline = Dense(64)(pipeline)
-    pipeline = BatchNormalization()(pipeline)
-    pipeline = LeakyReLU(alpha=0.05)(pipeline)
-    pipeline = Dropout(0.5)(pipeline)
-    """
+
     output = Dense(output_dim, activation=activation)(pipeline)
     model = Model(inputs=inputs, outputs=output)
 
@@ -134,7 +95,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
     cb = [callbacks.ProgbarLogger(count_mode='samples'),
           callbacks.ReduceLROnPlateau(monitor='loss',factor=0.5,patience=7,min_lr=0.00001),
-          callbacks.ModelCheckpoint('./model_results_fb/A0{:d}_model.hdf5'.format(subject),monitor='val_loss',verbose=0,
+          callbacks.ModelCheckpoint('./model_results_fb_global/A0{:d}_model.hdf5'.format(subject),monitor='val_loss',verbose=0,
                                     save_best_only=True, period=1),
           callbacks.EarlyStopping(patience=early_stopping, monitor='val_acc', min_delta=0.0001)]
     model.summary()
@@ -156,7 +117,7 @@ def evaluate_model(X_test, y_test, subject, crops):
     
     # Multi-class Classification
     model_name = 'A0{:d}_model'.format(subject)
-    model = load_model('./model_results_fb/{}.hdf5'.format(model_name))
+    model = load_model('./model_results_fb_global/{}.hdf5'.format(model_name))
     y_pred = model.predict(X_test)
     #Y_preds = np.argmax(y_pred, axis=1)
     Y_preds = np.argmax(y_pred, axis=1).reshape(num_trials, crops)
@@ -180,7 +141,7 @@ def evaluate_model(X_test, y_test, subject, crops):
     avg_tot = (out_df.apply(lambda x: round(x.mean(), 2) if x.name!="support" else  round(x.sum(), 2)).to_frame().T)
     avg_tot.index = ["avg/total"]
     out_df = out_df.append(avg_tot)
-    out_df.to_csv('./model_results_fb/{}.csv'.format(model_name))
+    out_df.to_csv('./model_results_fb_global/{}.csv'.format(model_name))
     
     print(metrics.classification_report(actual,predicted))
     print('kappa value: {}'.format(kappa_score))
