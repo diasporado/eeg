@@ -89,7 +89,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe2 = BatchNormalization()(pipe2)
         pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         #pipe2 = Dropout(0.5)(pipe2)
-        pipe2 = Conv3D(4, (1,3,3), strides=(1,1,1), padding='same')(inputs)
+        pipe2 = Conv3D(4, (1,3,3), strides=(1,1,1), padding='same')(pipe2)
         pipe2 = BatchNormalization()(pipe2)
         pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         pipe2 = Conv3D(4, (1,6,7), strides=(1,1,1), padding='valid')(pipe2)
