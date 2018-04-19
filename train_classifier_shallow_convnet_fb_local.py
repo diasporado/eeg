@@ -63,7 +63,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     #X_val = np.split(X_val, [1,2,3], axis=4) 
     
     n_epoch = 500
-    early_stopping = 30
+    early_stopping = 40
     classes_len = len(np.unique(y_train))
 
     Y_train = to_categorical(y_train, classes_len)
