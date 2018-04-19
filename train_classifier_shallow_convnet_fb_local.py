@@ -63,7 +63,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     #X_val = np.split(X_val, [1,2,3], axis=4) 
     
     n_epoch = 500
-    early_stopping = 40
+    early_stopping = 30
     classes_len = len(np.unique(y_train))
 
     Y_train = to_categorical(y_train, classes_len)
@@ -208,7 +208,7 @@ if __name__ == '__main__': # if this file is been run directly by Python
                     for i in range(len(subjects_test))]
 
     # Iterate training and test on each subject separately
-    for i in range(9):
+    for i in range(1,9):
         train_index = subj_train_order[i] 
         test_index = subj_test_order[i]
         np.random.seed(123)
