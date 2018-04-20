@@ -90,13 +90,12 @@ def train(X_train, y_train, X_val, y_val, subject):
     def layers(inputs):
         
         #pipe = se_block(inputs, compress_rate=9)
-        pipe = Conv3D(64, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
+        pipe = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
         pipe = LeakyReLU(alpha=0.05)(pipe)
         pipe = Dropout(0.5)(pipe)
         pipe = BatchNormalization()(pipe)
-        pipe = se_block(pipe, compress_rate = 16)
-        pipe = Reshape((pipe.shape[1].value, 64))(pipe)
-
+        #pipe = se_block(pipe, compress_rate = 16)
+        pipe = Reshape((pipe.shape[1].value, 40))(pipe)
         pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
         pipe = Flatten()(pipe)
         return pipe
@@ -106,7 +105,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     output = Dense(output_dim, activation=activation)(pipeline)
     model = Model(inputs=inputs, outputs=output)
 
-    opt = optimizers.adam(lr=0.001, beta_2=0.999)
+    opt = optimizers.SGD(lr=0.001, nesterov=True, beta_2=0.999)
     model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
     cb = [callbacks.ProgbarLogger(count_mode='samples'),
           callbacks.ReduceLROnPlateau(monitor='loss',factor=0.5,patience=7,min_lr=0.00001),
