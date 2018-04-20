@@ -110,7 +110,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe2 = Dropout(0.5)(pipe2)
         pipe2 = BatchNormalization()(pipe2)
         pipe2 = se_block(pipe2, compress_rate=4)
-        pipe2 = Reshape((pipe2.shape[1].value, 4))(pipe2)
+        pipe2 = Reshape((pipe2.shape[1].value, 40))(pipe2)
         
         """
         pipe12 = concatenate([pipe1,pipe2], axis=4)
