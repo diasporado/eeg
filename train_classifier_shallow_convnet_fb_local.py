@@ -100,7 +100,8 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe1 = Reshape((pipe1.shape[1].value, 4))(pipe1)
         """
         
-        pipe2 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
+        pipe2 = se_block(inputs, )
+        pipe2 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(pipe2)
         pipe2 = se_block(pipe2)
         #pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         #pipe2 = BatchNormalization()(pipe2)
