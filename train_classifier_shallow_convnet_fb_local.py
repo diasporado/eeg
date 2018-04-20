@@ -101,7 +101,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         """
         
         pipe2 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
-        pipe2 = se_block()(pipe2)
+        pipe2 = se_block(pipe2)
         #pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         #pipe2 = BatchNormalization()(pipe2)
         #pipe2 = Dropout(0.5)(pipe2)
@@ -129,7 +129,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         
         pipe = concatenate([pipe12,pipe3], axis=2)
         """
-        pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe1)
+        pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe2)
         pipe = Flatten()(pipe)
         return pipe
     

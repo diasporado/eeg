@@ -89,11 +89,12 @@ def train(X_train, y_train, X_val, y_val, subject):
     
     def layers(inputs):
         
+        pipe = se_block(inputs)
         pipe = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
-        pipe = se_block(pipe)
         pipe = LeakyReLU(alpha=0.05)(pipe)
         pipe = Dropout(0.5)(pipe)
         pipe = BatchNormalization()(pipe)
+        pipe = se_block(pipe)
         pipe = Reshape((pipe.shape[1].value, 40))(pipe)
 
         pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
@@ -186,7 +187,7 @@ if __name__ == '__main__': # if this file is been run directly by Python
                     for i in range(len(subjects_test))]
 
     # Iterate training and test on each subject separately
-    for i in range(1,9):
+    for i in range(9):
         train_index = subj_train_order[i] 
         test_index = subj_test_order[i]
         np.random.seed(123)
