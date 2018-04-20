@@ -89,13 +89,13 @@ def train(X_train, y_train, X_val, y_val, subject):
     
     def layers(inputs):
         
-        #pipe = se_block(inputs, compress_rate=9)
-        pipe = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
+        pipe = se_block(inputs, compress_rate=3)
+        pipe = Conv3D(64, (1,6,7), strides=(1,1,1), padding='valid')(pipe)
         pipe = LeakyReLU(alpha=0.05)(pipe)
         pipe = Dropout(0.5)(pipe)
         pipe = BatchNormalization()(pipe)
-        #pipe = se_block(pipe, compress_rate = 16)
-        pipe = Reshape((pipe.shape[1].value, 40))(pipe)
+        pipe = se_block(pipe, compress_rate = 16)
+        pipe = Reshape((pipe.shape[1].value, 64))(pipe)
         pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
         pipe = Flatten()(pipe)
         return pipe
