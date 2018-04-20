@@ -94,7 +94,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe = LeakyReLU(alpha=0.05)(pipe)
         pipe = Dropout(0.5)(pipe)
         pipe = BatchNormalization()(pipe)
-        pipe = se_block(pipe, compress_rate = 4)
+        #pipe = se_block(pipe, compress_rate = 4)
         pipe = Reshape((pipe.shape[1].value, 40))(pipe)
 
         pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
