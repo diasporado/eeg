@@ -93,10 +93,10 @@ def train(X_train, y_train, X_val, y_val, subject):
         
         pipe1 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
         pipe1 = AveragePooling3D(pool_size=(1,3,3), strides=(1,1,1), padding='same')(pipe1)
+        pipe1 = Conv3D(4, (1,6,7), strides=(1,1,1), padding='valid')(pipe1)
         pipe1 = LeakyReLU(alpha=0.05)(pipe1)
         pipe1 = Dropout(0.5)(pipe1)
         pipe1 = BatchNormalization()(pipe1)
-        pipe1 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe1)
         #pipe1 = Reshape((pipe1.shape[1].value, 42, 4))(pipe1)
         
         """
