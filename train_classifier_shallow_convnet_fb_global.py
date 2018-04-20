@@ -105,7 +105,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     output = Dense(output_dim, activation=activation)(pipeline)
     model = Model(inputs=inputs, outputs=output)
 
-    opt = optimizers.SGD(lr=0.001, nesterov=True, beta_2=0.999)
+    opt = optimizers.SGD(lr=0.001, nesterov=True)
     model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
     cb = [callbacks.ProgbarLogger(count_mode='samples'),
           callbacks.ReduceLROnPlateau(monitor='loss',factor=0.5,patience=7,min_lr=0.00001),
