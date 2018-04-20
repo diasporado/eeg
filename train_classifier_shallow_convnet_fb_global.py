@@ -8,7 +8,8 @@ import tensorflow as tf
 from keras.models import Model, Sequential, load_model
 from keras.layers import Dense,BatchNormalization,AveragePooling2D,MaxPooling2D,MaxPooling3D, \
     Convolution2D,Activation,Flatten,Dropout,Convolution1D,Reshape,Conv3D,TimeDistributed,LSTM,AveragePooling3D, \
-    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU, AveragePooling1D
+    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU, AveragePooling1D, GlobalAveragePooling2D, \
+    multiply
 from keras.utils.np_utils import to_categorical
 from keras import optimizers, callbacks
 import matplotlib
@@ -20,6 +21,18 @@ import read_bci_data_fb
 '''
 Training model for classification of EEG samples into motor imagery classes
 '''
+def se_block(input_tensor, compress_rate = 4):
+    num_channels = int(input_tensor.shape[-1]) # Tensorflow backend
+    bottle_neck = int(num_channels//compress_rate)
+ 
+    se_branch = GlobalAveragePooling2D()(input_tensor)
+    se_branch = Dense(bottle_neck, activation='relu')(se_branch)
+    se_branch = Dense(num_channels, activation='sigmoid')(se_branch)
+ 
+    x = input_tensor 
+    out = multiply([x, se_branch])
+ 
+    return out
 
 def build_crops(X, y, increment, training=True):
     print("Obtaining sliding window samples (original data)")
@@ -77,9 +90,10 @@ def train(X_train, y_train, X_val, y_val, subject):
     def layers(inputs):
         
         pipe = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
-        pipe = BatchNormalization()(pipe)
+        pipe = se_block()(pipe)
         pipe = LeakyReLU(alpha=0.05)(pipe)
         pipe = Dropout(0.5)(pipe)
+        pipe = BatchNormalization()(pipe)
         pipe = Reshape((pipe.shape[1].value, 40))(pipe)
 
         pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
