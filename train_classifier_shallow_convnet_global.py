@@ -16,7 +16,7 @@ import matplotlib
 #matplotlib.use('Agg')
 #import matplotlib.pyplot as plt
 #import seaborn as sn
-import read_bci_data_fb
+import read_bci_data_global
 
 '''
 Training model for classification of EEG samples into motor imagery classes
@@ -91,7 +91,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     def layers(inputs):
         
         pipe = Convolution2D(40, (1,22), strides=(1,1), padding='valid')(inputs)
-        pipe = se_block()(pipe)
+        #pipe = se_block()(pipe)
         pipe = LeakyReLU(alpha=0.05)(pipe)
         pipe = Dropout(0.5)(pipe)
         pipe = BatchNormalization()(pipe)
@@ -179,11 +179,11 @@ if __name__ == '__main__': # if this file is been run directly by Python
     
     # load bci competition data set
     
-    raw_edf_train, subjects_train = read_bci_data_fb.load_raw(training=True)
+    raw_edf_train, subjects_train = read_bci_data_global.load_raw(training=True)
     subj_train_order = [ np.argwhere(np.array(subjects_train)==i+1)[0][0]
                     for i in range(len(subjects_train))]
 
-    raw_edf_test, subjects_test = read_bci_data_fb.load_raw(training=False)
+    raw_edf_test, subjects_test = read_bci_data_global.load_raw(training=False)
     subj_test_order = [ np.argwhere(np.array(subjects_test)==i+1)[0][0]
                     for i in range(len(subjects_test))]
 
@@ -192,7 +192,7 @@ if __name__ == '__main__': # if this file is been run directly by Python
         train_index = subj_train_order[i] 
         test_index = subj_test_order[i]
         np.random.seed(123)
-        X, y = read_bci_data_fb.raw_to_data(raw_edf_train[train_index], training=True, drop_rejects=True, subj=train_index)
+        X, y = read_bci_data_global.raw_to_data(raw_edf_train[train_index], training=True, drop_rejects=True, subj=train_index)
         X, y, crops = build_crops(X, y, 20, training=True)
         X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2)
         
@@ -206,7 +206,7 @@ if __name__ == '__main__': # if this file is been run directly by Python
             del(X)
             del(y)
             gc.collect()
-            X_test, y_test = read_bci_data_fb.raw_to_data(raw_edf_test[test_index], training=False, drop_rejects=True, subj=test_index)
+            X_test, y_test = read_bci_data_global.raw_to_data(raw_edf_test[test_index], training=False, drop_rejects=True, subj=test_index)
             X_test, y_test, crops = build_crops(X_test, y_test, 20, training=False)
             evaluate_model(X_test, y_test, i+1, crops)
             del(X_test)

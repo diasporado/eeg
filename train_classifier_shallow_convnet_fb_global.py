@@ -90,7 +90,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     def layers(inputs):
         
         pipe = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
-        pipe = se_block()(pipe)
+        pipe = se_block(pipe)
         pipe = LeakyReLU(alpha=0.05)(pipe)
         pipe = Dropout(0.5)(pipe)
         pipe = BatchNormalization()(pipe)
