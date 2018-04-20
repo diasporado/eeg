@@ -105,7 +105,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         #pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         #pipe2 = BatchNormalization()(pipe2)
         #pipe2 = Dropout(0.5)(pipe2)
-        pipe2 = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(pipe2)
+        pipe2 = Conv3D(0, (1,6,7), strides=(1,1,1), padding='valid')(pipe2)
         pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         pipe2 = Dropout(0.5)(pipe2)
         pipe2 = BatchNormalization()(pipe2)
@@ -229,7 +229,7 @@ if __name__ == '__main__': # if this file is been run directly by Python
                     for i in range(len(subjects_test))]
 
     # Iterate training and test on each subject separately
-    for i in range(1,9):
+    for i in range(1):
         train_index = subj_train_order[i] 
         test_index = subj_test_order[i]
         np.random.seed(123)
