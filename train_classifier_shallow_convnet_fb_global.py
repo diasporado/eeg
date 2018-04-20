@@ -21,7 +21,7 @@ import read_bci_data_fb
 '''
 Training model for classification of EEG samples into motor imagery classes
 '''
-def se_block(input_tensor, compress_rate = 4):
+def se_block(input_tensor, compress_rate = 9):
     num_channels = int(input_tensor.shape[-1]) # Tensorflow backend
     bottle_neck = int(num_channels//compress_rate)
  
@@ -89,12 +89,12 @@ def train(X_train, y_train, X_val, y_val, subject):
     
     def layers(inputs):
         
-        pipe = se_block(inputs)
+        pipe = se_block(inputs, compress_rate=9)
         pipe = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
         pipe = LeakyReLU(alpha=0.05)(pipe)
         pipe = Dropout(0.5)(pipe)
         pipe = BatchNormalization()(pipe)
-        pipe = se_block(pipe)
+        pipe = se_block(pipe, compress_rate = 4)
         pipe = Reshape((pipe.shape[1].value, 40))(pipe)
 
         pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
