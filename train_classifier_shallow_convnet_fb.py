@@ -77,7 +77,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     #X_val = np.split(X_val, [1,2,3], axis=4) 
     
     n_epoch = 500
-    early_stopping = 15
+    early_stopping = 10
     classes_len = len(np.unique(y_train))
 
     Y_train = to_categorical(y_train, classes_len)
@@ -147,7 +147,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     opt = optimizers.adam(lr=0.001, beta_2=0.999)
     model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
     cb = [callbacks.ProgbarLogger(count_mode='samples'),
-          callbacks.ReduceLROnPlateau(monitor='loss',factor=0.5,patience=8,min_lr=0.00001),
+          callbacks.ReduceLROnPlateau(monitor='loss',factor=0.5,patience=5,min_lr=0.00001),
           callbacks.ModelCheckpoint('./model_results_fb/A0{:d}_model.hdf5'.format(subject),monitor='val_loss',verbose=0,
                                     save_best_only=True, period=1),
           callbacks.EarlyStopping(patience=early_stopping, monitor='val_acc', min_delta=0.0001)]
@@ -225,7 +225,7 @@ if __name__ == '__main__': # if this file is been run directly by Python
                     for i in range(len(subjects_test))]
 
     # Iterate training and test on each subject separately
-    for i in range(9):
+    for i in range(1,9):
         train_index = subj_train_order[i] 
         test_index = subj_test_order[i]
         np.random.seed(123)

@@ -8,7 +8,7 @@ import tensorflow as tf
 from keras.models import Model, Sequential, load_model
 from keras.layers import Dense,BatchNormalization,AveragePooling2D,MaxPooling2D,MaxPooling3D, \
     Convolution2D,Activation,Flatten,Dropout,Convolution1D,Reshape,Conv3D,TimeDistributed,LSTM,AveragePooling3D, \
-    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU, AveragePooling1D, GlobalAveragePooling3D, \
+    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU, AveragePooling1D, GlobalAveragePooling1D, \
     multiply
 from keras.utils.np_utils import to_categorical
 from keras import optimizers, callbacks
@@ -26,7 +26,7 @@ def se_block(input_tensor, compress_rate = 4):
     num_channels = int(input_tensor.shape[-1]) # Tensorflow backend
     bottle_neck = int(num_channels//compress_rate)
  
-    se_branch = GlobalAveragePooling3D()(input_tensor)
+    se_branch = GlobalAveragePooling1D()(input_tensor)
     se_branch = Dense(bottle_neck, activation='relu')(se_branch)
     se_branch = Dense(num_channels, activation='sigmoid')(se_branch)
  
@@ -101,18 +101,19 @@ def train(X_train, y_train, X_val, y_val, subject):
         """
         
         #pipe2 = se_block(inputs, compress_rate=9)
-        pipe2 = Conv3D(64, (1,3,3), strides=(1,1,1), padding='same')(inputs)
+        pipe2 = Conv3D(64, (1,3,3), strides=(1,1,1), padding='valid')(inputs)
         #pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         #pipe2 = Dropout(0.5)(pipe2)
         #pipe2 = BatchNormalization()(pipe2)
         #pipe2 = se_block(pipe2, compress_rate=4)
-        pipe2 = Conv3D(64, (1,6,7), strides=(1,1,1), padding='valid')(pipe2)
+        pipe2 = Conv3D(64, (1,3,3), strides=(1,1,1), padding='valid')(pipe2)
+        pipe2 = Conv3D(64, (1,2,3), strides=(1,1,1), padding='valid')(pipe2)
         pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         pipe2 = Dropout(0.5)(pipe2)
         pipe2 = BatchNormalization()(pipe2)
-        pipe2 = se_block(pipe2, compress_rate=16)
         #pipe2 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe2)
         pipe2 = Reshape((pipe2.shape[1].value, 64))(pipe2)
+        pipe2 = se_block(pipe2, compress_rate=16)
         
         """
         pipe12 = concatenate([pipe1,pipe2], axis=4)
@@ -153,7 +154,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     opt = optimizers.adam(lr=0.001, beta_2=0.999)
     model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
     cb = [callbacks.ProgbarLogger(count_mode='samples'),
-          callbacks.ReduceLROnPlateau(monitor='loss',factor=0.5,patience=7,min_lr=0.00001),
+          callbacks.ReduceLROnPlateau(monitor='loss',factor=0.5,patience=5,min_lr=0.00001),
           callbacks.ModelCheckpoint('./model_results_fb_local/A0{:d}_model.hdf5'.format(subject),monitor='val_loss',verbose=0,
                                     save_best_only=True, period=1),
           callbacks.EarlyStopping(patience=early_stopping, monitor='val_acc', min_delta=0.0001)]
