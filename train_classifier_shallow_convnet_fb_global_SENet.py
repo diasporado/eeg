@@ -95,12 +95,12 @@ def train(X_train, y_train, X_val, y_val, subject):
         val_inputs.append(X_val[i].reshape(X_val_shape[0],X_val_shape[1],X_val_shape[2],X_val_shape[3],1))
     
     def layers(inputs):
-        pipe = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
+        pipe = Conv3D(64, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
         pipe = LeakyReLU(alpha=0.05)(pipe)
         pipe = Dropout(0.5)(pipe)
         pipe = BatchNormalization()(pipe)
         #pipe = Reshape((pipe.shape[1].value, 40))(pipe)
-        pipe = Reshape((pipe.shape[1].value, 1, 40))(pipe)
+        pipe = Reshape((pipe.shape[1].value, 1, 64))(pipe)
         return pipe
 
     pipes = []
@@ -108,8 +108,8 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipes.append(layers(inputs[i]))
         
     pipeline = concatenate(pipes, axis=2)
-    pipeline = Convolution2D(4, (1,9), strides=(1,1), padding='valid')(pipeline)
-    #pipeline = se_block(pipeline, compress_rate = 15)
+    pipeline = Convolution2D(64, (1,9), strides=(1,1), padding='valid')(pipeline)
+    pipeline = se_block(pipeline, compress_rate = 16)
     pipeline = LeakyReLU(alpha=0.05)(pipeline)
     pipeline = Dropout(0.5)(pipeline)
     pipeline = BatchNormalization()(pipeline)
