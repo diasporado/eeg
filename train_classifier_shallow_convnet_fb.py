@@ -8,7 +8,8 @@ import tensorflow as tf
 from keras.models import Model, Sequential, load_model
 from keras.layers import Dense,BatchNormalization,AveragePooling2D,MaxPooling2D,MaxPooling3D, \
     Convolution2D,Activation,Flatten,Dropout,Convolution1D,Reshape,Conv3D,TimeDistributed,LSTM,AveragePooling3D, \
-    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU, AveragePooling1D, GlobalAveragePooling1D
+    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU, AveragePooling1D, GlobalAveragePooling1D, \
+    multiply
 from keras.utils.np_utils import to_categorical
 from keras import optimizers, callbacks
 import matplotlib
