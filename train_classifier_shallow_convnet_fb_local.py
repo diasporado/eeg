@@ -195,7 +195,7 @@ def evaluate_model(X_test, y_test, subject, crops):
     }
     out_df = pd.DataFrame(out_dict, index = np.sort(all_classes))
     out_df['kappa'] = kappa_score
-    avg_tot = (out_df.apply(lambda x: round(x.mean(), 2) if x.name!="support" else  round(x.sum(), 2)).to_frame().T)
+    avg_tot = (out_df.apply(lambda x: round(x.mean(), 3) if x.name!="support" else  round(x.sum(), 3)).to_frame().T)
     avg_tot.index = ["avg/total"]
     out_df = out_df.append(avg_tot)
     out_df.to_csv('./model_results_fb_local/{}.csv'.format(model_name))

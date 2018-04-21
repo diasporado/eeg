@@ -8,7 +8,8 @@ import tensorflow as tf
 from keras.models import Model, Sequential, load_model
 from keras.layers import Dense,BatchNormalization,AveragePooling2D,MaxPooling2D,MaxPooling3D, \
     Convolution2D,Activation,Flatten,Dropout,Convolution1D,Reshape,Conv3D,TimeDistributed,LSTM,AveragePooling3D, \
-    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU, AveragePooling1D
+    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU, AveragePooling1D, GlobalAveragePooling3D, \
+    multiply
 from keras.utils.np_utils import to_categorical
 from keras import optimizers, callbacks
 import matplotlib
@@ -20,6 +21,18 @@ import read_bci_data_fb
 '''
 Training model for classification of EEG samples into motor imagery classes
 '''
+def se_block(input_tensor, compress_rate = 9):
+    num_channels = int(input_tensor.shape[-1]) # Tensorflow backend
+    bottle_neck = int(num_channels//compress_rate)
+ 
+    se_branch = GlobalAveragePooling3D()(input_tensor)
+    se_branch = Dense(bottle_neck, activation='relu')(se_branch)
+    se_branch = Dense(num_channels, activation='sigmoid')(se_branch)
+ 
+    x = input_tensor 
+    out = multiply([x, se_branch])
+ 
+    return out
 
 def build_crops(X, y, increment, training=True):
     print("Obtaining sliding window samples (original data)")
@@ -59,11 +72,12 @@ def build_crops(X, y, increment, training=True):
 def train(X_train, y_train, X_val, y_val, subject):
     
     X_shape = X_train.shape
-    #X_train = np.split(X_train, [1,2,3], axis=4)
-    #X_val = np.split(X_val, [1,2,3], axis=4) 
+    X_val_shape = X_val.shape
+    X_train = np.split(X_train, np.arange(1,9,1).tolist(), axis=4)
+    X_val = np.split(X_val, np.arange(1,9,1).tolist(), axis=4) 
     
     n_epoch = 500
-    early_stopping = 40
+    early_stopping = 30
     classes_len = len(np.unique(y_train))
 
     Y_train = to_categorical(y_train, classes_len)
@@ -72,91 +86,60 @@ def train(X_train, y_train, X_val, y_val, subject):
     loss = 'categorical_crossentropy'
     activation = 'softmax'
     
-    inputs = Input(shape=(X_shape[1],X_shape[2],X_shape[3],X_shape[4]))
+    train_inputs = []
+    val_inputs = []
+    inputs = []
+    for i in range(len(X_train)):
+        inputs.append(Input(shape=(X_shape[1],X_shape[2],X_shape[3],1)))
+        train_inputs.append(X_train[i].reshape(X_shape[0],X_shape[1],X_shape[2],X_shape[3],1))
+        val_inputs.append(X_val[i].reshape(X_val_shape[0],X_val_shape[1],X_val_shape[2],X_val_shape[3],1))
     
     def layers(inputs):
-        #pipe = Conv3D(40, (25,1,1), strides=(1,1,1), activation='linear')(inputs)
- 
-        pipe1 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
-        pipe1 = AveragePooling3D(pool_size=(1,3,3), strides=(1,1,1), padding='same')(pipe1)
-        pipe1 = LeakyReLU(alpha=0.05)(pipe1)
-        pipe1 = Dropout(0.5)(pipe1)
-        pipe1 = BatchNormalization()(pipe1)
-        pipe1 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe1)
-        #pipe1 = Reshape((pipe1.shape[1].value, 42, 4))(pipe1)
-        
-        pipe2 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
-        #pipe2 = BatchNormalization()(pipe2)
-        #pipe2 = LeakyReLU(alpha=0.05)(pipe2)
-        #pipe2 = Dropout(0.5)(pipe2)
-        pipe2 = Conv3D(4, (1,3,3), strides=(1,1,1), padding='same')(pipe2)
-        pipe2 = LeakyReLU(alpha=0.05)(pipe2)
-        pipe2 = Dropout(0.5)(pipe2)
-        pipe2 = BatchNormalization()(pipe2)
-        #pipe2 = Reshape((pipe2.shape[1].value, 42, 4))(pipe2)
-        
-        pipe12 = concatenate([pipe1,pipe2], axis=4)
-        pipe12 = Conv3D(4, (1,6,7), strides=(1,1,1), padding='valid')(pipe12)
-        pipe12 = LeakyReLU(alpha=0.05)(pipe12)
-        pipe12 = Dropout(0.5)(pipe12)
-        pipe12 = BatchNormalization()(pipe12)
-        #pipe12 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe12)
-        pipe12 = Reshape((pipe12.shape[1].value, 4))(pipe12)
-        
-        pipe3 = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
-        pipe3 = LeakyReLU(alpha=0.05)(pipe3)
-        pipe3 = Dropout(0.5)(pipe3)
-        pipe3 = BatchNormalization()(pipe3)
-        pipe3 = Conv3D(4, (1,1,1),  strides=(1,1,1), padding='valid')(pipe3)
-        pipe3 = Reshape((pipe3.shape[1].value, 4))(pipe3)
-        
-        pipe = concatenate([pipe12,pipe3], axis=2)
-        
-        pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
-        pipe = Flatten()(pipe)
+        pipe = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
+        pipe = LeakyReLU(alpha=0.05)(pipe)
+        pipe = Dropout(0.5)(pipe)
+        pipe = BatchNormalization()(pipe)
+        pipe = Reshape((pipe.shape[1].value, 40))(pipe)
         return pipe
-    
-    pipeline = layers(inputs)
-    """
-    pipeline = Dense(128)(pipeline)
-    pipeline = BatchNormalization()(pipeline)
-    pipeline = LeakyReLU(alpha=0.05)(pipeline)
-    pipeline = Dropout(0.5)(pipeline)
-    pipeline = Dense(64)(pipeline)
-    pipeline = BatchNormalization()(pipeline)
-    pipeline = LeakyReLU(alpha=0.05)(pipeline)
-    pipeline = Dropout(0.5)(pipeline)
-    """
+
+    pipes = []
+    for i in range(len(X_train)):
+        pipes.append(layers(inputs[i]))
+        
+    pipeline = concatenate(pipes, axis=2)
+    pipeline = se_block(pipeline, compress_rate = 15)
+    pipeline = AveragePooling1D(pool_size=(75), strides=(15))(pipeline)
+    pipeline = Flatten()(pipeline)
     output = Dense(output_dim, activation=activation)(pipeline)
     model = Model(inputs=inputs, outputs=output)
 
     opt = optimizers.adam(lr=0.001, beta_2=0.999)
     model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
     cb = [callbacks.ProgbarLogger(count_mode='samples'),
-          callbacks.ReduceLROnPlateau(monitor='loss',factor=0.5,patience=8,min_lr=0.00001),
-          callbacks.ModelCheckpoint('./model_results_fb/A0{:d}_model.hdf5'.format(subject),monitor='val_loss',verbose=0,
+          callbacks.ReduceLROnPlateau(monitor='loss',factor=0.5,patience=7,min_lr=0.00001),
+          callbacks.ModelCheckpoint('./model_results_fb_global/A0{:d}_model.hdf5'.format(subject),monitor='val_loss',verbose=0,
                                     save_best_only=True, period=1),
           callbacks.EarlyStopping(patience=early_stopping, monitor='val_acc', min_delta=0.0001)]
     model.summary()
-    model.fit(X_train, Y_train, validation_data=(X_val, Y_val), 
+    model.fit(train_inputs, Y_train, validation_data=(val_inputs, Y_val), 
               batch_size=128, epochs=n_epoch, verbose=1, callbacks=cb)
 
 
 
 def evaluate_model(X_test, y_test, subject, crops):
     
-    #X_test = np.split(X_test, [1,2,3], axis=4)
+    X_test = np.split(X_test, np.arange(1,9,1).tolist(), axis=4)
     
     all_classes = ['LEFT_HAND','RIGHT_HAND','FEET','TONGUE']
     actual = [ all_classes[i] for i in y_test ]
     #actual = np.hstack([ [i]*crops for i in actual ]) # Uncomment to enable crop-based testing
     
-    num_trials = int(len(X_test)/crops)
+    num_trials = int(len(X_test[0])/crops)
     predicted = []
     
     # Multi-class Classification
     model_name = 'A0{:d}_model'.format(subject)
-    model = load_model('./model_results_fb/{}.hdf5'.format(model_name))
+    model = load_model('./model_results_fb_global/{}.hdf5'.format(model_name))
     y_pred = model.predict(X_test)
     #Y_preds = np.argmax(y_pred, axis=1)
     Y_preds = np.argmax(y_pred, axis=1).reshape(num_trials, crops)
@@ -180,7 +163,7 @@ def evaluate_model(X_test, y_test, subject, crops):
     avg_tot = (out_df.apply(lambda x: round(x.mean(), 3) if x.name!="support" else  round(x.sum(), 3)).to_frame().T)
     avg_tot.index = ["avg/total"]
     out_df = out_df.append(avg_tot)
-    out_df.to_csv('./model_results_fb/{}.csv'.format(model_name))
+    out_df.to_csv('./model_results_fb_global/{}.csv'.format(model_name))
     
     print(metrics.classification_report(actual,predicted))
     print('kappa value: {}'.format(kappa_score))

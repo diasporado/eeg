@@ -80,17 +80,17 @@ def train(X_train, y_train, X_val, y_val, subject):
     pipeline = Reshape((pipeline.shape[1].value, pipeline.shape[2].value,pipeline.shape[3].value,1))(pipeline)
     pipeline = Conv3D(40, (1,40,22), strides=(1,1,1))(pipeline)
     print(pipeline.shape)
-    pipeline = BatchNormalization()(pipeline)
     pipeline = Activation('elu')(pipeline)
     pipeline = Dropout(0.5)(pipeline)
+    pipeline = BatchNormalization()(pipeline)
     pipeline = AveragePooling3D(pool_size=(75,1,1), strides=(15,1,1))(pipeline)
     pipeline = Flatten()(pipeline)
     output = Dense(output_dim, activation='softmax')(pipeline)
-    opt = optimizers.adam(lr=0.01)
+    opt = optimizers.adam(lr=0.001, beta_2=0.999)
     model = Model(inputs=inputs, outputs=output)
     model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
     cb = [callbacks.ProgbarLogger(count_mode='samples'),
-          callbacks.ReduceLROnPlateau(monitor='val_acc',factor=0.2,patience=5,min_lr=0.0001),
+          callbacks.ReduceLROnPlateau(monitor='loss',factor=0.5,patience=7,min_lr=0.0001),
           callbacks.ModelCheckpoint('./model_results/A0{:d}_model.hdf5'.format(subject),monitor='val_loss',verbose=0,
                                     save_best_only=True, period=1),
           callbacks.EarlyStopping(patience=early_stopping, monitor='val_acc')]
@@ -125,14 +125,14 @@ def evaluate_model(X_test, y_test, subject, crops):
     confusion_metric =  metrics.confusion_matrix(actual,predicted,labels=all_classes)
     clf_rep = metrics.precision_recall_fscore_support(actual, predicted)
     out_dict = {
-         "precision" :clf_rep[0].round(2)
-        ,"recall" : clf_rep[1].round(2)
-        ,"f1-score" : clf_rep[2].round(2)
+         "precision" :clf_rep[0].round(3)
+        ,"recall" : clf_rep[1].round(3)
+        ,"f1-score" : clf_rep[2].round(3)
         ,"support" : clf_rep[3]
     }
     out_df = pd.DataFrame(out_dict, index = np.sort(all_classes))
     out_df['kappa'] = kappa_score
-    avg_tot = (out_df.apply(lambda x: round(x.mean(), 2) if x.name!="support" else  round(x.sum(), 2)).to_frame().T)
+    avg_tot = (out_df.apply(lambda x: round(x.mean(), 3) if x.name!="support" else  round(x.sum(), 3)).to_frame().T)
     avg_tot.index = ["avg/total"]
     out_df = out_df.append(avg_tot)
     out_df.to_csv('./model_results/{}.csv'.format(model_name))

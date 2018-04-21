@@ -105,7 +105,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     output = Dense(output_dim, activation=activation)(pipeline)
     model = Model(inputs=inputs, outputs=output)
 
-    opt = optimizers.SGD(lr=0.01)
+    opt = optimizers.adam(lr=0.001, beta_2=0.999)
     model.compile(loss=loss, optimizer=opt, metrics=['accuracy'])
     cb = [callbacks.ProgbarLogger(count_mode='samples'),
           callbacks.ReduceLROnPlateau(monitor='loss',factor=0.5,patience=7,min_lr=0.00001),
@@ -152,7 +152,7 @@ def evaluate_model(X_test, y_test, subject, crops):
     }
     out_df = pd.DataFrame(out_dict, index = np.sort(all_classes))
     out_df['kappa'] = kappa_score
-    avg_tot = (out_df.apply(lambda x: round(x.mean(), 2) if x.name!="support" else  round(x.sum(), 2)).to_frame().T)
+    avg_tot = (out_df.apply(lambda x: round(x.mean(), 3) if x.name!="support" else  round(x.sum(), 3)).to_frame().T)
     avg_tot.index = ["avg/total"]
     out_df = out_df.append(avg_tot)
     out_df.to_csv('./model_results_fb_global/{}.csv'.format(model_name))
