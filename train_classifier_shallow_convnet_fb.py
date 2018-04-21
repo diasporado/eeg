@@ -108,6 +108,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         #pipe2 = se_block(pipe2, compress_rate=5)
         #pipe2 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe2)
         pipe2 = Reshape((pipe2.shape[1].value, 64))(pipe2)
+        pipe2 = se_block(pipe2, compress_rate=16)
         """
         pipe12 = concatenate([pipe1,pipe2], axis=4)
         pipe12 = Conv3D(4, (1,6,7), strides=(1,1,1), padding='valid')(pipe12)
