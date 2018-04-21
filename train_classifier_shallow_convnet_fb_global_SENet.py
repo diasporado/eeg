@@ -100,7 +100,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe = Dropout(0.5)(pipe)
         pipe = BatchNormalization()(pipe)
         #pipe = Reshape((pipe.shape[1].value, 40))(pipe)
-        pipe = Reshape((pipe.shape[1].value, 1, 40))(pipe)
+        pipe = Reshape((pipe.shape[1].value, 1, 40, 1))(pipe)
         return pipe
 
     pipes = []
