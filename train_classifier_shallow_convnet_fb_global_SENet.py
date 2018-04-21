@@ -109,10 +109,10 @@ def train(X_train, y_train, X_val, y_val, subject):
         
     pipeline = concatenate(pipes, axis=2)
     pipeline = Convolution2D(64, (1,9), strides=(1,1), padding='valid')(pipeline)
-    pipeline = se_block(pipeline, compress_rate = 16)
     pipeline = LeakyReLU(alpha=0.05)(pipeline)
     pipeline = Dropout(0.5)(pipeline)
     pipeline = BatchNormalization()(pipeline)
+    pipeline = se_block(pipeline, compress_rate = 16)
     pipeline = AveragePooling2D(pool_size=(75,1), strides=(15,1))(pipeline)
     pipeline = Flatten()(pipeline)
     output = Dense(output_dim, activation=activation)(pipeline)
