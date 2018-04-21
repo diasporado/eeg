@@ -97,12 +97,12 @@ def train(X_train, y_train, X_val, y_val, subject):
         #pipe2 = BatchNormalization()(pipe2)
         #pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         #pipe2 = Dropout(0.5)(pipe2)
-        #pipe2 = Conv3D(4, (1,3,3), strides=(1,1,1), padding='same')(pipe2)
         pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         pipe2 = Dropout(0.5)(pipe2)
         pipe2 = BatchNormalization()(pipe2)
         pipe2 = se_block(pipe2, compress_rate=16)
-        pipe2 = Reshape((pipe2.shape[1].value, 64))(pipe2)
+        pipe2 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe2)
+        pipe2 = Reshape((pipe2.shape[1].value, 4))(pipe2)
         """
         pipe12 = concatenate([pipe1,pipe2], axis=4)
         pipe12 = Conv3D(4, (1,6,7), strides=(1,1,1), padding='valid')(pipe12)
@@ -116,11 +116,11 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe3 = LeakyReLU(alpha=0.05)(pipe3)
         pipe3 = Dropout(0.5)(pipe3)
         pipe3 = BatchNormalization()(pipe3)
-        #pipe3 = Conv3D(4, (1,1,1),  strides=(1,1,1), padding='valid')(pipe3)
-        pipe3 = Reshape((pipe3.shape[1].value, 64))(pipe3)
+        pipe3 = Conv3D(4, (1,1,1),  strides=(1,1,1), padding='valid')(pipe3)
+        pipe3 = Reshape((pipe3.shape[1].value, 4))(pipe3)
         
         pipe = concatenate([pipe2,pipe3], axis=2)
-        pipe = Convolution1D(4, 25, strides=1, padding='valid')(pipe)
+        #pipe = Convolution1D(4, 25, strides=1, padding='valid')(pipe)
         pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
         pipe = Flatten()(pipe)
         return pipe
@@ -220,7 +220,7 @@ if __name__ == '__main__': # if this file is been run directly by Python
                     for i in range(len(subjects_test))]
 
     # Iterate training and test on each subject separately
-    for i in range(1,9):
+    for i in range(9):
         train_index = subj_train_order[i] 
         test_index = subj_test_order[i]
         np.random.seed(123)
