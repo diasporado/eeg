@@ -8,7 +8,7 @@ import tensorflow as tf
 from keras.models import Model, Sequential, load_model
 from keras.layers import Dense,BatchNormalization,AveragePooling2D,MaxPooling2D,MaxPooling3D, \
     Convolution2D,Activation,Flatten,Dropout,Convolution1D,Reshape,Conv3D,TimeDistributed,LSTM,AveragePooling3D, \
-    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU, AveragePooling1D
+    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU, AveragePooling1D, GlobalAveragePooling1D
 from keras.utils.np_utils import to_categorical
 from keras import optimizers, callbacks
 import matplotlib
@@ -20,6 +20,19 @@ import read_bci_data_fb
 '''
 Training model for classification of EEG samples into motor imagery classes
 '''
+
+def se_block(input_tensor, compress_rate = 4):
+    num_channels = int(input_tensor.shape[-1]) # Tensorflow backend
+    bottle_neck = int(num_channels//compress_rate)
+ 
+    se_branch = GlobalAveragePooling1D()(input_tensor)
+    se_branch = Dense(bottle_neck, activation='relu')(se_branch)
+    se_branch = Dense(num_channels, activation='sigmoid')(se_branch)
+ 
+    x = input_tensor 
+    out = multiply([x, se_branch])
+ 
+    return out
 
 def build_crops(X, y, increment, training=True):
     print("Obtaining sliding window samples (original data)")
@@ -77,24 +90,18 @@ def train(X_train, y_train, X_val, y_val, subject):
     def layers(inputs):
         #pipe = Conv3D(40, (25,1,1), strides=(1,1,1), activation='linear')(inputs)
  
-        pipe1 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
-        pipe1 = AveragePooling3D(pool_size=(1,3,3), strides=(1,1,1), padding='same')(pipe1)
-        pipe1 = LeakyReLU(alpha=0.05)(pipe1)
-        pipe1 = Dropout(0.5)(pipe1)
-        pipe1 = BatchNormalization()(pipe1)
-        pipe1 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe1)
-        #pipe1 = Reshape((pipe1.shape[1].value, 42, 4))(pipe1)
-        
-        pipe2 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
+        pipe2 = Conv3D(64, (1,3,3), strides=(1,1,1), padding='same')(inputs)
+        pipe2 = LeakyReLU(alpha=0.05)(pipe2)
+        pipe2 = Conv3D(64, (1,6,7), strides=(1,1,1), padding='valid')(pipe2)
         #pipe2 = BatchNormalization()(pipe2)
         #pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         #pipe2 = Dropout(0.5)(pipe2)
-        pipe2 = Conv3D(4, (1,3,3), strides=(1,1,1), padding='same')(pipe2)
+        #pipe2 = Conv3D(4, (1,3,3), strides=(1,1,1), padding='same')(pipe2)
         pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         pipe2 = Dropout(0.5)(pipe2)
         pipe2 = BatchNormalization()(pipe2)
-        #pipe2 = Reshape((pipe2.shape[1].value, 42, 4))(pipe2)
-        
+        pipe2 = Reshape((pipe2.shape[1].value, 64))(pipe2)
+        """
         pipe12 = concatenate([pipe1,pipe2], axis=4)
         pipe12 = Conv3D(4, (1,6,7), strides=(1,1,1), padding='valid')(pipe12)
         pipe12 = LeakyReLU(alpha=0.05)(pipe12)
@@ -102,16 +109,16 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe12 = BatchNormalization()(pipe12)
         #pipe12 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe12)
         pipe12 = Reshape((pipe12.shape[1].value, 4))(pipe12)
-        
-        pipe3 = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
+        """
+        pipe3 = Conv3D(64, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
         pipe3 = LeakyReLU(alpha=0.05)(pipe3)
         pipe3 = Dropout(0.5)(pipe3)
         pipe3 = BatchNormalization()(pipe3)
-        pipe3 = Conv3D(4, (1,1,1),  strides=(1,1,1), padding='valid')(pipe3)
-        pipe3 = Reshape((pipe3.shape[1].value, 4))(pipe3)
+        #pipe3 = Conv3D(4, (1,1,1),  strides=(1,1,1), padding='valid')(pipe3)
+        pipe3 = Reshape((pipe3.shape[1].value, 64))(pipe3)
         
-        pipe = concatenate([pipe12,pipe3], axis=2)
-        
+        pipe = concatenate([pipe2,pipe3], axis=2)
+        pipe = se_block(pipe, compress_rate=16)
         pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
         pipe = Flatten()(pipe)
         return pipe
