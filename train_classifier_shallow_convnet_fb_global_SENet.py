@@ -99,7 +99,8 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe = LeakyReLU(alpha=0.05)(pipe)
         pipe = Dropout(0.5)(pipe)
         pipe = BatchNormalization()(pipe)
-        pipe = Reshape((pipe.shape[1].value, 40))(pipe)
+        #pipe = Reshape((pipe.shape[1].value, 40))(pipe)
+        pipe = Reshape((pipe.shape[1].value, 1, 40))(pipe)
         return pipe
 
     pipes = []
@@ -107,7 +108,8 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipes.append(layers(inputs[i]))
         
     pipeline = concatenate(pipes, axis=2)
-    pipeline = se_block(pipeline, compress_rate = 15)
+    pipeline = Conv3D(4, (1,9,40), strides=(1,1,1), padding='valid')(pipeline)
+    #pipeline = se_block(pipeline, compress_rate = 15)
     pipeline = AveragePooling1D(pool_size=(75), strides=(15))(pipeline)
     pipeline = Flatten()(pipeline)
     output = Dense(output_dim, activation=activation)(pipeline)
