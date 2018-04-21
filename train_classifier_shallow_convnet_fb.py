@@ -96,7 +96,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         #pipe2 = Dropout(0.5)(pipe2)
         #pipe2 = BatchNormalization()(pipe2)
         #pipe2 = se_block(pipe2, compress_rate=4)
-        pipe2 = Conv3D(4, (1,6,7), strides=(1,1,1), padding='valid')(pipe2)
+        pipe2 = Conv3D(32, (1,6,7), strides=(1,1,1), padding='valid')(pipe2)
         #pipe2 = BatchNormalization()(pipe2)
         #pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         #pipe2 = Dropout(0.5)(pipe2)
@@ -105,7 +105,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe2 = Dropout(0.5)(pipe2)
         #pipe2 = se_block(pipe2, compress_rate=5)
         #pipe2 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe2)
-        pipe2 = Reshape((pipe2.shape[1].value, 4))(pipe2)
+        pipe2 = Reshape((pipe2.shape[1].value, 32))(pipe2)
         """
         pipe12 = concatenate([pipe1,pipe2], axis=4)
         pipe12 = Conv3D(4, (1,6,7), strides=(1,1,1), padding='valid')(pipe12)
@@ -115,18 +115,18 @@ def train(X_train, y_train, X_val, y_val, subject):
         #pipe12 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe12)
         pipe12 = Reshape((pipe12.shape[1].value, 4))(pipe12)
         """
-        pipe3 = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
+        pipe3 = Conv3D(32, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
         pipe3 = BatchNormalization()(pipe3)
         pipe3 = LeakyReLU(alpha=0.05)(pipe3)
         pipe3 = Dropout(0.5)(pipe3)
         #pipe3 = se_block(pipe3, compress_rate=16)
-        pipe3 = Conv3D(4, (1,1,1),  strides=(1,1,1), padding='valid')(pipe3)
-        pipe3 = Reshape((pipe3.shape[1].value, 4))(pipe3)
+        #pipe3 = Conv3D(40, (1,1,1),  strides=(1,1,1), padding='valid')(pipe3)
+        pipe3 = Reshape((pipe3.shape[1].value, 32))(pipe3)
         
         pipe = concatenate([pipe2,pipe3], axis=2)
         #pipe = Convolution1D(4, 25, strides=1, padding='valid')(pipe)
         pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
-        pipe = se_block(pipe, compress_rate=8)
+        pipe = se_block(pipe, compress_rate=16)
         pipe = Flatten()(pipe)
         return pipe
     
