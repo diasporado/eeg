@@ -91,16 +91,19 @@ def train(X_train, y_train, X_val, y_val, subject):
     def layers(inputs):
         #pipe = Conv3D(40, (25,1,1), strides=(1,1,1), activation='linear')(inputs)
  
-        pipe2 = Conv3D(64, (1,3,3), strides=(1,1,1), padding='same')(inputs)
+        pipe2 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
         pipe2 = LeakyReLU(alpha=0.05)(pipe2)
-        pipe2 = Conv3D(64, (1,6,7), strides=(1,1,1), padding='valid')(pipe2)
+        pipe2 = Dropout(0.5)(pipe2)
+        pipe2 = BatchNormalization()(pipe2)
+        pipe2 = se_block(pipe2, compress_rate=4)
+        pipe2 = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(pipe2)
         #pipe2 = BatchNormalization()(pipe2)
         #pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         #pipe2 = Dropout(0.5)(pipe2)
         pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         pipe2 = Dropout(0.5)(pipe2)
         pipe2 = BatchNormalization()(pipe2)
-        pipe2 = se_block(pipe2, compress_rate=16)
+        pipe2 = se_block(pipe2, compress_rate=4)
         pipe2 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe2)
         pipe2 = Reshape((pipe2.shape[1].value, 4))(pipe2)
         """
@@ -112,10 +115,11 @@ def train(X_train, y_train, X_val, y_val, subject):
         #pipe12 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe12)
         pipe12 = Reshape((pipe12.shape[1].value, 4))(pipe12)
         """
-        pipe3 = Conv3D(64, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
+        pipe3 = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
         pipe3 = LeakyReLU(alpha=0.05)(pipe3)
         pipe3 = Dropout(0.5)(pipe3)
         pipe3 = BatchNormalization()(pipe3)
+        pipe3 = se_block(pipe3, compress_rate=4)
         pipe3 = Conv3D(4, (1,1,1),  strides=(1,1,1), padding='valid')(pipe3)
         pipe3 = Reshape((pipe3.shape[1].value, 4))(pipe3)
         
