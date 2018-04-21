@@ -101,12 +101,12 @@ def train(X_train, y_train, X_val, y_val, subject):
         """
         
         #pipe2 = se_block(inputs, compress_rate=9)
-        pipe2 = Conv3D(64, (1,3,3), strides=(1,1,1), padding='same')(inputs)
+        pipe2 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
         pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         #pipe2 = Dropout(0.5)(pipe2)
         #pipe2 = BatchNormalization()(pipe2)
         #pipe2 = se_block(pipe2, compress_rate=4)
-        pipe2 = Conv3D(64, (1,6,7), strides=(1,1,1), padding='valid')(pipe2)
+        pipe2 = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(pipe2)
         pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         pipe2 = Dropout(0.5)(pipe2)
         pipe2 = BatchNormalization()(pipe2)

@@ -8,7 +8,7 @@ import tensorflow as tf
 from keras.models import Model, Sequential, load_model
 from keras.layers import Dense,BatchNormalization,AveragePooling2D,MaxPooling2D,MaxPooling3D, \
     Convolution2D,Activation,Flatten,Dropout,Convolution1D,Reshape,Conv3D,TimeDistributed,LSTM,AveragePooling3D, \
-    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU, AveragePooling1D, GlobalAveragePooling3D, \
+    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU, AveragePooling1D, GlobalAveragePooling1D, \
     multiply
 from keras.utils.np_utils import to_categorical
 from keras import optimizers, callbacks
@@ -26,7 +26,7 @@ def se_block(input_tensor, compress_rate = 4):
     num_channels = int(input_tensor.shape[-1]) # Tensorflow backend
     bottle_neck = int(num_channels//compress_rate)
  
-    se_branch = GlobalAveragePooling3D()(input_tensor)
+    se_branch = GlobalAveragePooling1D()(input_tensor)
     se_branch = Dense(bottle_neck, activation='relu')(se_branch)
     se_branch = Dense(num_channels, activation='sigmoid')(se_branch)
  
@@ -91,20 +91,20 @@ def train(X_train, y_train, X_val, y_val, subject):
     def layers(inputs):
         #pipe = Conv3D(40, (25,1,1), strides=(1,1,1), activation='linear')(inputs)
  
-        pipe2 = Conv3D(64, (1,3,3), strides=(1,1,1), padding='same')(inputs)
-        #pipe2 = LeakyReLU(alpha=0.05)(pipe2)
+        pipe2 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='same')(inputs)
+        pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         #pipe2 = Dropout(0.5)(pipe2)
         #pipe2 = BatchNormalization()(pipe2)
         #pipe2 = se_block(pipe2, compress_rate=4)
-        pipe2 = Conv3D(64, (1,6,7), strides=(1,1,1), padding='valid')(pipe2)
+        pipe2 = Conv3D(4, (1,6,7), strides=(1,1,1), padding='valid')(pipe2)
         #pipe2 = BatchNormalization()(pipe2)
         #pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         #pipe2 = Dropout(0.5)(pipe2)
         pipe2 = BatchNormalization()(pipe2)
         pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         pipe2 = Dropout(0.5)(pipe2)
-        pipe2 = se_block(pipe2, compress_rate=16)
-        pipe2 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe2)
+        #pipe2 = se_block(pipe2, compress_rate=5)
+        #pipe2 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe2)
         pipe2 = Reshape((pipe2.shape[1].value, 4))(pipe2)
         """
         pipe12 = concatenate([pipe1,pipe2], axis=4)
@@ -126,6 +126,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe = concatenate([pipe2,pipe3], axis=2)
         #pipe = Convolution1D(4, 25, strides=1, padding='valid')(pipe)
         pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
+        pipe = se_block(pipe, compress_rate=8)
         pipe = Flatten()(pipe)
         return pipe
     
@@ -224,7 +225,7 @@ if __name__ == '__main__': # if this file is been run directly by Python
                     for i in range(len(subjects_test))]
 
     # Iterate training and test on each subject separately
-    for i in range(6,9):
+    for i in range(9):
         train_index = subj_train_order[i] 
         test_index = subj_test_order[i]
         np.random.seed(123)
