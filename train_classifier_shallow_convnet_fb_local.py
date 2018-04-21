@@ -8,7 +8,7 @@ import tensorflow as tf
 from keras.models import Model, Sequential, load_model
 from keras.layers import Dense,BatchNormalization,AveragePooling2D,MaxPooling2D,MaxPooling3D, \
     Convolution2D,Activation,Flatten,Dropout,Convolution1D,Reshape,Conv3D,TimeDistributed,LSTM,AveragePooling3D, \
-    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU, AveragePooling1D, GlobalAveragePooling1D, \
+    Input, AveragePooling3D, MaxPooling3D, concatenate, LeakyReLU, AveragePooling1D, GlobalAveragePooling3D, \
     multiply
 from keras.utils.np_utils import to_categorical
 from keras import optimizers, callbacks
@@ -26,7 +26,7 @@ def se_block(input_tensor, compress_rate = 4):
     num_channels = int(input_tensor.shape[-1]) # Tensorflow backend
     bottle_neck = int(num_channels//compress_rate)
  
-    se_branch = GlobalAveragePooling1D()(input_tensor)
+    se_branch = GlobalAveragePooling3D()(input_tensor)
     se_branch = Dense(bottle_neck, activation='relu')(se_branch)
     se_branch = Dense(num_channels, activation='sigmoid')(se_branch)
  
