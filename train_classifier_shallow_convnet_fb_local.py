@@ -77,7 +77,7 @@ def train(X_train, y_train, X_val, y_val, subject):
     #X_val = np.split(X_val, [1,2,3], axis=4) 
     
     n_epoch = 500
-    early_stopping = 15
+    early_stopping = 10
     classes_len = len(np.unique(y_train))
 
     Y_train = to_categorical(y_train, classes_len)
@@ -100,9 +100,9 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe1 = Reshape((pipe1.shape[1].value, 4))(pipe1)
         """
         
-        #pipe2 = se_block(inputs, compress_rate=9)
-        pipe2 = Conv3D(64, (1,3,3), strides=(1,1,1), padding='same')(inputs)
-        #pipe2 = LeakyReLU(alpha=0.05)(pipe2)
+        pipe2 = se_block(inputs, compress_rate=9)
+        pipe2 = Conv3D(64, (1,3,3), strides=(1,1,1), padding='same')(pipe2)
+        pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         #pipe2 = Dropout(0.5)(pipe2)
         #pipe2 = BatchNormalization()(pipe2)
         #pipe2 = se_block(pipe2, compress_rate=4)
@@ -110,7 +110,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         pipe2 = Dropout(0.5)(pipe2)
         pipe2 = BatchNormalization()(pipe2)
-        pipe2 = se_block(pipe2, compress_rate=16)
+        pipe2 = se_block(pipe2, compress_rate=8)
         #pipe2 = Conv3D(4, (1,1,1), strides=(1,1,1), padding='valid')(pipe2)
         pipe2 = Reshape((pipe2.shape[1].value, 64))(pipe2)
         
