@@ -95,7 +95,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe1 = Conv3D(64, (1,3,3), strides=(1,1,1), padding='valid')(pipe1)
         
         pipe2 = Conv3D(64, (1,3,3), strides=(1,1,1), padding='valid')(inputs)
-        pipe2 = Conv3D(64, (1,3,3), strides=(1,1,1), padding='valid')(pipe2)
+        pipe2 = AveragePooling3D(pool_size=(1,3,3), strides=(1,1,1), padding='valid')(pipe2)
         #pipe2 = LeakyReLU(alpha=0.05)(pipe2)
         #pipe2 = Dropout(0.5)(pipe2)
         #pipe2 = BatchNormalization()(pipe2)
