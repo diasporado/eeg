@@ -97,7 +97,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe1 = LeakyReLU(alpha=0.05)(pipe1)
         pipe1 = Dropout(0.5)(pipe1)
         pipe1 = BatchNormalization()(pipe1)
-        pipe1 = Reshape((pipe1.shape[1].value, 4))(pipe1)
+        pipe1 = Reshape((pipe1.shape[1].value, 64))(pipe1)
         
         
         #pipe2 = se_block(inputs, compress_rate=9)
