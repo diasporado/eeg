@@ -137,7 +137,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         
         pipe = concatenate([pipe1,pipe3], axis=2)
         #pipe = Convolution1D(4, 25, strides=1, padding='valid')(pipe)
-        pipe = se_block(pipe, compress_rate=16)
+        #pipe = se_block(pipe, compress_rate=16)
         pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
         #pipe = Dense(40)(pipe)
         #pipe = LeakyReLU(alpha=0.05)(pipe)
@@ -239,7 +239,7 @@ if __name__ == '__main__': # if this file is been run directly by Python
                     for i in range(len(subjects_test))]
 
     # Iterate training and test on each subject separately
-    for i in range(1):
+    for i in range(9):
         train_index = subj_train_order[i] 
         test_index = subj_test_order[i]
         np.random.seed(123)
