@@ -139,8 +139,9 @@ def train(X_train, y_train, X_val, y_val, subject):
         #pipe = Convolution1D(4, 25, strides=1, padding='valid')(pipe)
         #pipe = se_block(pipe, compress_rate=16)
         pipe = AveragePooling1D(pool_size=(75), strides=(15))(pipe)
-        pipe = Dense(40)(pipe)
         pipe = Flatten()(pipe)
+        pipe = Dense(40)(pipe)
+        pipe = LeakyReLU(alpha=0.05)(pipe)
         return pipe
     
     pipeline = layers(inputs)
