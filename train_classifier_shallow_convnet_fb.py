@@ -95,7 +95,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         pipe1 = Conv3D(40, (1,3,3), strides=(1,1,1), padding='valid')(pipe1)
         pipe1 = Conv3D(40, (1,2,3), strides=(1,1,1), padding='valid')(pipe1)
         pipe1 = LeakyReLU(alpha=0.05)(pipe1)
-        pipe1 = Dropout(0.5)(pipe1)
+        pipe1 = Dropout(0.7)(pipe1)
         pipe1 = BatchNormalization()(pipe1)
         pipe1 = Reshape((pipe1.shape[1].value, 40))(pipe1)
         
@@ -129,7 +129,7 @@ def train(X_train, y_train, X_val, y_val, subject):
         """
         pipe3 = Conv3D(40, (1,6,7), strides=(1,1,1), padding='valid')(inputs)
         pipe3 = LeakyReLU(alpha=0.05)(pipe3)
-        pipe3 = Dropout(0.5)(pipe3)
+        pipe3 = Dropout(0.7)(pipe3)
         pipe3 = BatchNormalization()(pipe3)
         #pipe3 = se_block(pipe3, compress_rate=16)
         #pipe3 = Conv3D(4, (1,1,1),  strides=(1,1,1), padding='valid')(pipe3)
